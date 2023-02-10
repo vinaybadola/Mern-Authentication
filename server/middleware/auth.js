@@ -13,7 +13,7 @@ export default async function Auth(req, res, next){
          const decodedToken = await jwt.verify(token , ENV.JWT_SECRET);
          req.user = decodedToken;
 
-        res.json(decodedToken);
+        
 
         next();
         
@@ -23,4 +23,17 @@ export default async function Auth(req, res, next){
     } catch (error) {
         res.status(401).json({ error : "Authentication Failed!"})
     }
+}
+
+
+/**  middleware for local variables */
+
+export function localVariables(req,res, next){
+    req.app.locals = {
+        OTP: null,
+        resetSession: false,
+
+    }
+
+    next();
 }

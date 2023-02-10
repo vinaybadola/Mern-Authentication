@@ -2,7 +2,8 @@
 import UserModel from "../model/User.model.js";
 import bcrypt from 'bcrypt';
 import Jwt from 'jsonwebtoken';
-import ENV from '../config.js'
+import ENV from '../config.js';
+import otpGenerator from 'otp-generator';
 
 
 /** MiddleWare for Verify User */
@@ -203,22 +204,70 @@ export async function updateUser(req,res){
 
 /** GET: http://localhost:8080/api/genrateOTP */
 export async function generateOTP(req,res){
-    res.json('genrateOTP Route')
+   req.app.locals.OTP = await otpGenerator.generate(6, {lowerCaseAlphabets: false, upperCaseAlphabets:false, specialChars:false})
+   res.status(201).send({code : req.app.locals.OTP}) 
 }
 
 export async function verifyOTP(req,res){
-    res.json('verifyOTP Route')
+    const {code} = req.query;        // Accessing OTP from the URL
+         if(parseInt(req.app.locals.OTP) === parseInt(code)){
+            req.app.locals.OTP = null;  // Reset the OTP value 
+            req.app.locals.resetSession = true;   // Start session for reset Password
+            return res.status(201).send ({msg : 'Verify Successfully! '})
+         }
+
+         return res.status(400).send({error:"Invalid OTP"})
+
 }
 
 // Successfully redirect user when OTP is valid
 /** GET:  http://localhost:8080/api/createResetSession */
 export async function createResetSession(req,res){
-    res.json('CreateResetSession Route')
+    if(req.app.locals.resetSession){
+        req.app.locals.resetSession = false;  // allow access to this route only once 
+        return res.status(201).send({ msg:"Access Granted"})
+    }
+
+    return res.status(440).send({error:"Session Expired"})
 }
 
 
 // Update the Password when we have valid Session 
 /**PUT: http://localhost:8080/api/resetPassword */ 
 export async function resetPassword(req,res){
-    res.json('Verify Route')
+    try{
+
+        if(!req.app.locals.resetSession) return res.status(440).send({error:"Session Expired"})
+        const {username, password} = req.body;
+        try{
+
+            UserModel.findOne({username})
+            .then( user =>{
+                bcrypt.hash(password , 10)
+                .then( hashedPassword =>{
+                    UserModel.updateOne({ username: user.username},                      // Here updateOne method takes 2 args first select the user with username
+                       {password : hashedPassword}, function(err, data){                 // then it updates the password 
+                           if(err) throw err;
+                           return res.status(201).send({ msg:" Password Updated"})
+                       })
+                })
+                .catch( e =>{
+                    return res.status(500).send({
+                        error:"Unable to hashed Password"
+                    })
+                })
+            })
+            .catch(error =>{
+                return res.status(404).send({error :" Username not found"})
+            })
+
+        }catch(error){
+            return res.status(500).send({error})
+
+        }
+
+    }catch(error){
+        return res.status(401).send({error})
+
+    }
 }
