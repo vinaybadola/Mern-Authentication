@@ -177,12 +177,12 @@ body :{
  */
 export async function updateUser(req,res){
     try{
-        const id = req.query.id;
-        if(id){
+        const {userId} = req.user;
+        if(userId){
             const body =req.body;
             // update the data 
             /**MongoDB stores data with property _id */
-            UserModel.updateOne({_id: id}, body, function(err,data){
+            UserModel.updateOne({_id: userId}, body, function(err,data){
                 if(err) throw err;
 
                 return res.status(201).send({msg:"Record Updated"});
