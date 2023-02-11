@@ -11,7 +11,7 @@ export async function VerifyUser(req,res,next){
     try{
 
         // In this function if the request method is get we get data from the user or else if the request is POST or PUT we'll get the data from req.body
-        const {username} = req.method == 'GET'? req.query:req.body;
+        const {username} = req.method == "GET" ? req.query : req.body;
 
         // Check the User existence
         // If we find the user in the database the next() function will take us to next controller otherwise it will return error
@@ -167,7 +167,7 @@ export async function getUser(req,res){
  * we want to update
  * 
  * @param: {
-  "id": "<userid>"   
+  "header": "<token>"   
 }  
 body :{
     firstName:'',
