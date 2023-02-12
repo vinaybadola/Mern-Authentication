@@ -7,6 +7,6 @@ export const useAuthStore = create((set)=>({
         active:false
      },
      // setUsername is type of action as same as in Redux
-     setUsername : (name) => set((state) =>({auth : {...state.auth, username : name}}))
+     setUsername : (name) => set((state) => ({ auth : { ...state.auth, username : name }})) 
 }))
 
